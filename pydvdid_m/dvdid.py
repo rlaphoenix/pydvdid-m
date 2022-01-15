@@ -18,12 +18,19 @@ class DvdId:
         Computes a Windows API IDvdInfo2::GetDiscID-compatible 64-bit Cyclic Redundancy Check
         checksum from the DVD .vob, .ifo, and .bup files found in the supplied DVD device.
         """
-        if not isinstance(target, PyCdlib):
-            # assume str, open as a PyCdlib target
-            device = PyCdlib()
-            device.open(target)
-        else:
+        if isinstance(target, str):
+            target = Path(target)
+            if target.is_dir():
+                raise NotImplementedError("Extracted VIDEO_TS folders are not yet supported.")
+            else:
+                # assume path to an ISO
+                device = PyCdlib()
+                device.open(str(target))
+        elif isinstance(target, PyCdlib):
             device = target
+        else:
+            raise ValueError(f"Unsupported target: {target}")
+
         self.device = device
         self.disc_label = self.device.pvd.volume_identifier.replace(b"\x00", b"").strip().decode()
 
