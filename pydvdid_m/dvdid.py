@@ -7,7 +7,7 @@ from typing import Union, Iterator, Optional
 
 from dateutil.tz import tzoffset
 from pycdlib import PyCdlib
-from pycdlib.udf import UDFFileEntry
+from pycdlib.dr import DirectoryRecord
 
 from pydvdid_m.crc64 import CRC64
 
@@ -41,12 +41,12 @@ class DvdId:
         crc = CRC64(0x92c64265d32139a4)
 
         for file in self._get_files("/VIDEO_TS"):
-            crc.update(self._get_udf_creation_time(file))
-            crc.update(self._get_udf_size(file))
-            crc.update(self._get_udf_name(file))
+            crc.update(self._get_dr_creation_time(file))
+            crc.update(self._get_dr_size(file))
+            crc.update(self._get_dr_name(file))
 
         for file in self._get_files("/VIDEO_TS"):
-            if self._get_udf_name(file, as_string=True).upper() in ("VIDEO_TS.IFO", "VTS_01_0.IFO"):
+            if self._get_dr_name(file, as_string=True).upper() in ("VIDEO_TS.IFO", "VTS_01_0.IFO"):
                 crc.update(self._get_first_64k_content(file))
 
         self.checksum = crc
@@ -94,27 +94,27 @@ class DvdId:
         to.parent.mkdir(parents=True, exist_ok=True)
         return to.write_text(self.dumps(), encoding="utf8")
 
-    def _get_files(self, iso_path: str) -> Iterator[UDFFileEntry]:
+    def _get_files(self, iso_path: str) -> Iterator[DirectoryRecord]:
         """
         Yield all files in the device at the provided ISO path.
-        Note, `.` and `..` paths are skipped.
+        Note: Special paths `.` and `..` paths are not yielded.
         """
-        for udf_entry in self.device.list_children(iso_path=iso_path):
-            if udf_entry.file_identifier().decode() in (".", ".."):
+        for dr in self.device.list_children(iso_path=iso_path):
+            if dr.file_identifier().decode() in (".", ".."):
                 continue
-            yield udf_entry
+            yield dr
 
-    def _get_first_64k_content(self, udf_entry: UDFFileEntry) -> bytes:
+    def _get_first_64k_content(self, dr: DirectoryRecord) -> bytes:
         """
         Returns the first 65536 (or the file size, whichever is smaller) bytes of the file at the
         specified file path, as a bytearray.
         """
-        read_size = min(udf_entry.get_data_length(), 0x10000)
+        read_size = min(dr.get_data_length(), 0x10000)
 
         f = BytesIO()
         self.device.get_file_from_iso_fp(
             outfp=f,
-            iso_path=f"/VIDEO_TS/{udf_entry.file_identifier().decode()}"
+            iso_path=f"/VIDEO_TS/{dr.file_identifier().decode()}"
         )
         f.seek(0)
         content = f.read(read_size)
@@ -125,9 +125,9 @@ class DvdId:
         return content
 
     @staticmethod
-    def _get_udf_name(udf_entry: UDFFileEntry, as_string: bool = False) -> Union[bytearray, str]:
-        """Get the name of the UDF Entry as a UTF-8 bytearray terminated with a NUL character."""
-        file_identifier = udf_entry.file_identifier().decode()
+    def _get_dr_name(dr: DirectoryRecord, as_string: bool = False) -> Union[bytearray, str]:
+        """Get the name of the Directory Record as a UTF-8 bytearray terminated with a NUL character."""
+        file_identifier = dr.file_identifier().decode()
         file_name = file_identifier.split(";")[0]  # remove ;N (file version)
         if as_string:
             return file_name
@@ -136,28 +136,28 @@ class DvdId:
         return utf8_name
 
     @staticmethod
-    def _get_udf_size(udf_entry: UDFFileEntry) -> bytearray:
-        """Get the size of the UDF Entry formatted as a 4-byte unsigned integer bytearray."""
+    def _get_dr_size(dr: DirectoryRecord) -> bytearray:
+        """Get the size of the Directory Record formatted as a 4-byte unsigned integer bytearray."""
         file_size = bytearray(4)
-        pack_into(b"I", file_size, 0, udf_entry.get_data_length())
+        pack_into(b"I", file_size, 0, dr.get_data_length())
         return file_size
 
     @staticmethod
-    def _get_udf_creation_time(udf_entry: UDFFileEntry) -> bytearray:
+    def _get_dr_creation_time(dr: DirectoryRecord) -> bytearray:
         """
         Get the creation time in Microsoft FILETIME structure as a 8-byte unsigned integer bytearray.
         https://msdn.microsoft.com/en-us/library/windows/desktop/ms724284.aspx
         """
-        udf_date = udf_entry.date  # type: ignore
-        udf_date = datetime(
-            year=1900 + udf_date.years_since_1900, month=udf_date.month, day=udf_date.day_of_month,
-            hour=udf_date.hour, minute=udf_date.minute, second=udf_date.second,
+        dr_date = dr.date
+        dr_date = datetime(
+            year=1900 + dr_date.years_since_1900, month=dr_date.month, day=dr_date.day_of_month,
+            hour=dr_date.hour, minute=dr_date.minute, second=dr_date.second,
             # offset the timezone, since ISO's dates are offsets of GMT in 15 minute intervals, we
             # need to calculate that but in seconds to pass to tzoffset.
-            tzinfo=tzoffset("GMT", (15 * udf_date.gmtoffset) * 60)
+            tzinfo=tzoffset("GMT", (15 * dr_date.gmtoffset) * 60)
         )
 
-        epoch_offset = udf_date - datetime(1601, 1, 1, tzinfo=tzoffset(None, 0))
+        epoch_offset = dr_date - datetime(1601, 1, 1, tzinfo=tzoffset(None, 0))
         creation_time_filetime = int(int(epoch_offset.total_seconds()) * (10 ** 7))
 
         file_creation_time = bytearray(8)
