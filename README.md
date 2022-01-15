@@ -41,6 +41,16 @@ $ pip install pydvdid-m
 
 ## Usage
 
+You can run DvdId on all types of DVD video file structures:
+
+- Direct from Disc, e.g., `/dev/sr0`, `\\.\E:`, or such.
+- An ISO file, e.g., `/mnt/cdrom`, `C:/Users/John/Videos/FAMILY_GUY_VOLUME_11_DISC_1.ISO`.
+- A VIDEO_TS folder*, `C:/Users/John/Videos/THE_IT_CROWD_D1/`.
+
+Note: Generating a DVD ID from a VIDEO_TS folder has a high chance of providing an
+invalid DVD ID. The algorithm uses file creation timestamps, and extracting VIDEO_TS folders
+direct from Disc or from an ISO will most likely change them, especially when transferred or moved.
+
 ### CLI
 
 ```shell
