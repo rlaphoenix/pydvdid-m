@@ -32,7 +32,7 @@ class DvdId:
         else:
             raise ValueError(f"Unsupported target: {target}")
 
-        if not self.device.list_children(iso_path="/VIDEO_TS"):
+        if not any(self._get_files("/VIDEO_TS")):
             # Not a DVD-Video Disc?
             raise FileNotFoundError(f"The /VIDEO_TS directory and it's files doesn't exist in {target}")
 
