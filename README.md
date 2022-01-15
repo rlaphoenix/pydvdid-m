@@ -5,12 +5,14 @@
 ![wheel](https://img.shields.io/pypi/wheel/pydvdid-m.svg)
 ![versions](https://img.shields.io/pypi/pyversions/pydvdid-m.svg)
 
-Pure Python implementation of the Windows API method `IDvdInfo2::GetDiscID`.  
+Pure Python implementation of the Windows API method [IDvdInfo2::GetDiscID].  
 This is a modification of [sjwood's pydvdid](https://github.com/sjwood/pydvdid).
 
-The Windows API method `IDvdInfo2::GetDiscID` is used by Windows Media Center to compute a
+The Windows API method [IDvdInfo2::GetDiscID] is used by Windows Media Center to compute a
 'practically unique' 64-bit CRC for metadata retrieval. It's metadata retrieval API has
 sadly since shutdown around October 2019 and all it's information is presumably lost.
+
+  [IDvdInfo2::GetDiscID]: <https://docs.microsoft.com/en-us/windows/win32/api/strmif/nf-strmif-idvdinfo2-getdiscid>
 
 ## Changes compared to sjwood's repo
 
@@ -27,7 +29,7 @@ sadly since shutdown around October 2019 and all it's information is presumably 
 
 Other than that, the rest of the changes are general code improvements in various ways.
 There may be more differences as the repo gets commits, but these are the primary differences from
-sjwoods' commit https://github.com/sjwood/pydvdid/commit/03914fb7e24283c445e5af724f9d919b23caaf95 to
+[sjwood's commit](https://github.com/sjwood/pydvdid/commit/03914fb7e24283c445e5af724f9d919b23caaf95) to
 the beginnings of this repository.
 
 ## Installation
