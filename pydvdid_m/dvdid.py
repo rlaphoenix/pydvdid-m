@@ -3,7 +3,7 @@ from inspect import cleandoc
 from io import BytesIO
 from pathlib import Path
 from struct import pack_into
-from typing import Union, Iterator
+from typing import Union, Iterator, Optional
 
 from dateutil.tz import tzoffset
 from pycdlib import PyCdlib
@@ -31,8 +31,6 @@ class DvdId:
         else:
             raise ValueError(f"Unsupported target: {target}")
 
-        self.disc_label = self.device.pvd.volume_identifier.replace(b"\x00", b"").strip().decode()
-
         if not self.device.list_children(iso_path="/VIDEO_TS"):
             # Not a DVD-Video Disc?
             raise FileNotFoundError(f"The /VIDEO_TS directory and it's files doesn't exist in {target}")
@@ -52,6 +50,16 @@ class DvdId:
                 crc.update(self._get_first_64k_content(file))
 
         self.checksum = crc
+
+    @property
+    def disc_label(self) -> Optional[str]:
+        """Get Disc Label. Returns the directory Name if not an ISO or Device."""
+        if isinstance(self.device, PyCdlib):
+            return self.device.pvd.volume_identifier.replace(b"\x00", b"").strip().decode()
+        elif isinstance(self.device, Path):
+            return self.device.name
+        else:
+            return None
 
     def dumps(self) -> str:
         """Return DVD ID with Disc Label in XML format."""
