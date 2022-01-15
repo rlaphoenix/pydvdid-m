@@ -165,6 +165,7 @@ class DvdId:
             file_name = file_identifier.split(";")[0]  # remove ;N (file version)
         else:
             file_name = file.name
+        file_name = file_name.upper()  # linux may allow it as other casing
         if as_string:
             return file_name
         utf8_name = bytearray(file_name, "utf8")
