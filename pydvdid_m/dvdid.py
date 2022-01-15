@@ -109,6 +109,13 @@ class DvdId:
         except PyCdlibInvalidInput:
             pass  # path probably doesnt exist
 
+    def _get_file(self, iso_path: str) -> Union[DirectoryRecord, Path]:
+        path = Path(iso_path.lstrip("\\/"))
+        for file in self._get_files(f"/{path.parent}"):
+            if self._get_dr_name(file, as_string=True).upper() == path.name.upper():
+                return file
+        raise FileNotFoundError(f"File {path} could not be found.")
+
     def _get_first_64k_content(self, dr: DirectoryRecord) -> bytes:
         """
         Returns the first 65536 (or the file size, whichever is smaller) bytes of the file at the
