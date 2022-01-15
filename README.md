@@ -26,6 +26,7 @@ sadly since shutdown around October 2019 and all it's information is presumably 
 7. The merged CRC64 class contains various improvements over the original code, including
    improvements with doc-strings, formatting, and such.
 8. Various BASH shell scripts and config files were removed entirely as they are deemed unnecessary.
+9. Uses pycdlib to read from ISO and direct disc drives, instead of assuming that it's a folder.
 
 Other than that, the rest of the changes are general code improvements in various ways.
 There may be more differences as the repo gets commits, but these are the primary differences from
