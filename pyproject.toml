@@ -42,4 +42,4 @@ pywin32 = {version = "301", platform = "win32", optional = true}
 win_raw_dev = ["pywin32"]
 
 [tool.poetry.scripts]
-pydvdid = 'pydvdid_m.pydvdid_m:main'
+dvdid = 'pydvdid_m.pydvdid_m:main'
