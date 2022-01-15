@@ -8,6 +8,7 @@ from typing import Union, Iterator, Optional
 from dateutil.tz import tzoffset
 from pycdlib import PyCdlib
 from pycdlib.dr import DirectoryRecord
+from pycdlib.pycdlibexception import PyCdlibInvalidInput
 
 from pydvdid_m.crc64 import CRC64
 
@@ -99,10 +100,13 @@ class DvdId:
         Yield all files in the device at the provided ISO path.
         Note: Special paths `.` and `..` paths are not yielded.
         """
-        for dr in self.device.list_children(iso_path=iso_path):
-            if dr.file_identifier().decode() in (".", ".."):
-                continue
-            yield dr
+        try:
+            for dr in self.device.list_children(iso_path=iso_path):
+                if dr.file_identifier().decode() in (".", ".."):
+                    continue
+                yield dr
+        except PyCdlibInvalidInput:
+            pass  # path probably doesnt exist
 
     def _get_first_64k_content(self, dr: DirectoryRecord) -> bytes:
         """
