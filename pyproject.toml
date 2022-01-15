@@ -1,0 +1,45 @@
+[build-system]
+requires = ['poetry-core>=1.0.0']
+build-backend = 'poetry.core.masonry.api'
+
+[tool.poetry]
+name = 'pydvdid-m'
+version = '1.0.0'
+description = 'Pure Python implementation of the Windows API method IDvdInfo2::GetDiscID.'
+license = 'GPL-3.0-only'
+authors = [
+    'rlaphoenix <rlaphoenix@pm.me>',
+    'Steve Wood <octocat@nym.hush.com>',
+]
+maintainers = [
+    'rlaphoenix <rlaphoenix@pm.me>',
+]
+readme = 'README.md'
+homepage = 'https://github.com/rlaphoenix/pydvdid-m'
+repository = 'https://github.com/rlaphoenix/pydvdid-m'
+keywords = ['python', 'dvd', 'win-api']
+classifiers = [
+    'Development Status :: 1 - Planning',
+    'Environment :: Console',
+    'Intended Audience :: Developers',
+    'Natural Language :: English',
+    'Operating System :: OS Independent',
+    'Topic :: Home Automation',
+    'Topic :: Multimedia',
+    'Topic :: Multimedia :: Video',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+    'Topic :: Utilities',
+]
+
+[tool.poetry.dependencies]
+python = "^3.7,<4.0"
+# must be master not latest, needs some patches not yet in a release version
+pycdlib = { git = "https://github.com/clalancette/pycdlib.git", branch = "master" }
+python-dateutil = "^2.8.2"
+pywin32 = {version = "301", platform = "win32", optional = true}
+
+[tool.poetry.extras]
+win_raw_dev = ["pywin32"]
+
+[tool.poetry.scripts]
+pydvdid = 'pydvdid_m.pydvdid_m:main'
