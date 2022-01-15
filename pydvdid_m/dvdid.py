@@ -158,7 +158,7 @@ class DvdId:
         )
 
         epoch_offset = udf_date - datetime(1601, 1, 1, tzinfo=tzoffset(None, 0))
-        creation_time_filetime = int(epoch_offset.total_seconds() * (10 ** 7))
+        creation_time_filetime = int(int(epoch_offset.total_seconds()) * (10 ** 7))
 
         file_creation_time = bytearray(8)
         pack_into(b"Q", file_creation_time, 0, creation_time_filetime)
