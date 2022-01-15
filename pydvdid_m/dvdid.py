@@ -47,9 +47,8 @@ class DvdId:
                 crc.update(self._get_dr_size(file))
                 crc.update(self._get_dr_name(file))
 
-        for file in self._get_files("/VIDEO_TS"):
-            if self._get_dr_name(file, as_string=True).upper() in ("VIDEO_TS.IFO", "VTS_01_0.IFO"):
-                crc.update(self._get_first_64k_content(file))
+        crc.update(self._get_first_64k_content(self._get_file("/VIDEO_TS/VIDEO_TS.IFO")))
+        crc.update(self._get_first_64k_content(self._get_file("/VIDEO_TS/VTS_01_0.IFO")))
 
         self.checksum = crc
 
