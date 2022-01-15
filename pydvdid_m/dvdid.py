@@ -24,14 +24,13 @@ class DvdId:
                 raise NotImplementedError("Extracted VIDEO_TS folders are not yet supported.")
             else:
                 # assume path to an ISO
-                device = PyCdlib()
-                device.open(str(target))
+                self.device = PyCdlib()
+                self.device.open(str(target))
         elif isinstance(target, PyCdlib):
-            device = target
+            self.device = target
         else:
             raise ValueError(f"Unsupported target: {target}")
 
-        self.device = device
         self.disc_label = self.device.pvd.volume_identifier.replace(b"\x00", b"").strip().decode()
 
         if not self.device.list_children(iso_path="/VIDEO_TS"):
