@@ -42,9 +42,10 @@ class DvdId:
         crc = CRC64(0x92c64265d32139a4)
 
         for file in self._get_files("/VIDEO_TS"):
-            crc.update(self._get_dr_creation_time(file))
-            crc.update(self._get_dr_size(file))
-            crc.update(self._get_dr_name(file))
+            if self._get_dr_name(file, as_string=True).upper().split(".")[-1] in ("BUP", "IFO", "VOB"):
+                crc.update(self._get_dr_creation_time(file))
+                crc.update(self._get_dr_size(file))
+                crc.update(self._get_dr_name(file))
 
         for file in self._get_files("/VIDEO_TS"):
             if self._get_dr_name(file, as_string=True).upper() in ("VIDEO_TS.IFO", "VTS_01_0.IFO"):
