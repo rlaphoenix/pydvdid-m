@@ -120,7 +120,7 @@ class DvdId:
         content = f.read(read_size)
 
         if content is None or len(content) < read_size:
-            raise ValueError(f"{read_size} bytes were expected, {len(content or [])} were read.")
+            raise EOFError(f"{read_size} bytes were expected, {len(content or [])} were read.")
 
         return content
 
