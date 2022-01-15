@@ -29,3 +29,61 @@ Other than that, the rest of the changes are general code improvements in variou
 There may be more differences as the repo gets commits, but these are the primary differences from
 sjwoods' commit https://github.com/sjwood/pydvdid/commit/03914fb7e24283c445e5af724f9d919b23caaf95 to
 the beginnings of this repository.
+
+## Installation
+
+```shell
+$ pip install pydvdid-m
+```
+
+## Usage
+
+### CLI
+
+```shell
+phoenix@home@~$ dvdid "FAMILY_GUY_VOLUME_11_DISC_1.ISO"
+<Disc>
+<Name>FAMILY_GUY_VOLUME_11_DISC_1</Name>
+<ID>db3804e3|1645f594</ID>
+</Disc>
+```
+
+You can provide a path to an ISO file, or a mounted device, e.g.:
+
+```shell
+phoenix@home@~$ dvdid "/dev/sr0"
+<Disc>
+<Name>BBCDVD3508</Name>
+<ID>3f041dfc|27ffd3a8</ID>
+</Disc>
+```
+
+or on Windows via Raw Mounted Device:
+
+```shell
+PS> dvdid "\\.\E:"
+<Disc>
+<Name>BBCDVD3508</Name>
+<ID>3f041dfc|27ffd3a8</ID>
+</Disc>
+```
+
+### Package
+
+You can also use pydvdid-m in your own Python code by importing it.  
+Here's a couple of things you can do, and remember, you can use both ISO paths and mounted device targets.
+
+```python
+>>> from pydvdid_m import DvdId
+>>> dvd_id = DvdId(r"C:\Users\John\Videos\FAMILY_GUY_VOLUME_11_DISC_1.ISO")
+>>> dvd_id.disc_label
+'BBCDVD3508'
+>>> repr(dvd_id.checksum)
+'<CRC64 polynomial=0x92c64265d32139a4 xor=0xffffffffffffffff checksum=0x3f041dfc27ffd3a8>'
+>>> dvd_id.checksum
+'3f041dfc|27ffd3a8'
+>>> dvd_id.checksum.as_bytes
+b"?\x04\x1d\xfc'\xff\xd3\xa8"
+>>> dvd_id.dumps()
+'<Disc>\n<Name>BBCDVD3508</Name>\n<ID>3f041dfc|27ffd3a8</ID>\n</Disc>'
+```
