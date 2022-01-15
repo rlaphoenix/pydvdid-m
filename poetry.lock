@@ -1,17 +1,10 @@
 [[package]]
 name = "pycdlib"
-version = "1.13.0"
+version = "1.12.0"
 description = "Pure python ISO manipulation library"
 category = "main"
 optional = false
 python-versions = "*"
-develop = false
-
-[package.source]
-type = "git"
-url = "https://github.com/clalancette/pycdlib.git"
-reference = "master"
-resolved_reference = "5b341b35a5846a24349227c04cd6e81561dee3fc"
 
 [[package]]
 name = "python-dateutil"
@@ -46,10 +39,13 @@ win_raw_dev = ["pywin32"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7,<4.0"
-content-hash = "497a834b541ca9c0d00bfa3b92a7bea0302e3d4de635a87dc6db61df5ea640c4"
+content-hash = "16286753fffa5ae8f25678f935cbf0726efafe07cf4d5c3695a4cc5b67fc540e"
 
 [metadata.files]
-pycdlib = []
+pycdlib = [
+    {file = "pycdlib-1.12.0-py2.py3-none-any.whl", hash = "sha256:b16fb79f552740c28d74314a6fcbab91b44f44f36a23041725adea11436512a6"},
+    {file = "pycdlib-1.12.0.tar.gz", hash = "sha256:6549f29f8d9b4ba6933b309c51ff6a4dc79ef5831a81e065cb6cc385c1ba7fe2"},
+]
 python-dateutil = [
     {file = "python-dateutil-2.8.2.tar.gz", hash = "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86"},
     {file = "python_dateutil-2.8.2-py2.py3-none-any.whl", hash = "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"},

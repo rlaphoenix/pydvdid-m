@@ -33,8 +33,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.7,<4.0"
-# must be master not latest, needs some patches not yet in a release version
-pycdlib = { git = "https://github.com/clalancette/pycdlib.git", branch = "master" }
+pycdlib = "^1.12.0"  # Until 1.13.0 is released, Raw Windows Devices will not work
 python-dateutil = "^2.8.2"
 pywin32 = {version = "301", platform = "win32", optional = true}
 
