@@ -87,3 +87,7 @@ b"?\x04\x1d\xfc'\xff\xd3\xa8"
 >>> dvd_id.dumps()
 '<Disc>\n<Name>BBCDVD3508</Name>\n<ID>3f041dfc|27ffd3a8</ID>\n</Disc>'
 ```
+
+## License
+
+[GNU General Public License, Version 3](https://raw.githubusercontent.com/rlaphoenix/pydvdid-m/master/LICENSE)
