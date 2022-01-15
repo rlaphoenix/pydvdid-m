@@ -14,7 +14,7 @@ from pydvdid_m.crc64 import CRC64
 
 
 class DvdId:
-    def __init__(self, target: Union[str, PyCdlib]):
+    def __init__(self, target: Union[str, PyCdlib], allow_folder_id: bool = False):
         """
         Computes a Windows API IDvdInfo2::GetDiscID-compatible 64-bit Cyclic Redundancy Check
         checksum from the DVD .vob, .ifo, and .bup files found in the supplied DVD device.
@@ -22,7 +22,14 @@ class DvdId:
         if isinstance(target, str):
             target = Path(target)
             if target.is_dir():
-                raise NotImplementedError("Extracted VIDEO_TS folders are not yet supported.")
+                if allow_folder_id or input(
+                    "Warning: Extracted VIDEO_TS folders most likely have modified file timestamps. "
+                    "You may receive an inaccurate DVD ID if the timestamp does not match whats stated "
+                    "in the original ISO 9660 headers.\n\n"
+                    "Do you wish to continue anyway? (y/N): "
+                ).lower() != "y":
+                    return
+                self.device = target
             else:
                 # assume path to an ISO
                 self.device = PyCdlib()
@@ -42,10 +49,10 @@ class DvdId:
         crc = CRC64(0x92c64265d32139a4)
 
         for file in self._get_files("/VIDEO_TS"):
-            if self._get_dr_name(file, as_string=True).upper().split(".")[-1] in ("BUP", "IFO", "VOB"):
-                crc.update(self._get_dr_creation_time(file))
-                crc.update(self._get_dr_size(file))
-                crc.update(self._get_dr_name(file))
+            if self._get_file_name(file, as_string=True).upper().split(".")[-1] in ("BUP", "IFO", "VOB"):
+                crc.update(self._get_file_creation_time(file))
+                crc.update(self._get_file_size(file))
+                crc.update(self._get_file_name(file))
 
         crc.update(self._get_first_64k_content(self._get_file("/VIDEO_TS/VIDEO_TS.IFO")))
         crc.update(self._get_first_64k_content(self._get_file("/VIDEO_TS/VTS_01_0.IFO")))
@@ -100,35 +107,50 @@ class DvdId:
         Yield all files in the device at the provided ISO path.
         Note: Special paths `.` and `..` paths are not yielded.
         """
-        try:
-            for dr in self.device.list_children(iso_path=iso_path):
-                if dr.file_identifier().decode() in (".", ".."):
-                    continue
-                yield dr
-        except PyCdlibInvalidInput:
-            pass  # path probably doesnt exist
+        if isinstance(self.device, PyCdlib):
+            try:
+                for dr in self.device.list_children(iso_path=iso_path):
+                    if dr.file_identifier().decode() in (".", ".."):
+                        continue
+                    yield dr
+            except PyCdlibInvalidInput:
+                pass  # path probably doesnt exist
+        elif isinstance(self.device, Path):
+            for file in (self.device / iso_path.lstrip("\\/")).iterdir():
+                yield file
+        else:
+            raise ValueError(f"Target {self.device!r} unsupported.")
 
     def _get_file(self, iso_path: str) -> Union[DirectoryRecord, Path]:
         path = Path(iso_path.lstrip("\\/"))
         for file in self._get_files(f"/{path.parent}"):
-            if self._get_dr_name(file, as_string=True).upper() == path.name.upper():
+            if self._get_file_name(file, as_string=True).upper() == path.name.upper():
                 return file
         raise FileNotFoundError(f"File {path} could not be found.")
 
-    def _get_first_64k_content(self, dr: DirectoryRecord) -> bytes:
+    def _get_first_64k_content(self, file: Union[DirectoryRecord, Path]) -> bytes:
         """
         Returns the first 65536 (or the file size, whichever is smaller) bytes of the file at the
         specified file path, as a bytearray.
         """
-        read_size = min(dr.get_data_length(), 0x10000)
+        if isinstance(file, DirectoryRecord):
+            file_size = file.get_data_length()
+        else:
+            file_size = file.stat().st_size
+        read_size = min(file_size, 0x10000)
 
-        f = BytesIO()
-        self.device.get_file_from_iso_fp(
-            outfp=f,
-            iso_path=f"/VIDEO_TS/{dr.file_identifier().decode()}"
-        )
-        f.seek(0)
-        content = f.read(read_size)
+        if isinstance(file, DirectoryRecord):
+            f = BytesIO()
+            self.device.get_file_from_iso_fp(
+                outfp=f,
+                iso_path=f"/VIDEO_TS/{file.file_identifier().decode()}"
+            )
+            f.seek(0)
+            content = f.read(read_size)
+        else:
+            content = bytearray(read_size)
+            with file.open("rb") as f:
+                f.readinto(content)  # type: ignore
 
         if content is None or len(content) < read_size:
             raise EOFError(f"{read_size} bytes were expected, {len(content or [])} were read.")
@@ -136,10 +158,13 @@ class DvdId:
         return content
 
     @staticmethod
-    def _get_dr_name(dr: DirectoryRecord, as_string: bool = False) -> Union[bytearray, str]:
+    def _get_file_name(file: Union[Path, DirectoryRecord], as_string: bool = False) -> Union[bytearray, str]:
         """Get the name of the Directory Record as a UTF-8 bytearray terminated with a NUL character."""
-        file_identifier = dr.file_identifier().decode()
-        file_name = file_identifier.split(";")[0]  # remove ;N (file version)
+        if isinstance(file, DirectoryRecord):
+            file_identifier = file.file_identifier().decode()
+            file_name = file_identifier.split(";")[0]  # remove ;N (file version)
+        else:
+            file_name = file.name
         if as_string:
             return file_name
         utf8_name = bytearray(file_name, "utf8")
@@ -147,31 +172,43 @@ class DvdId:
         return utf8_name
 
     @staticmethod
-    def _get_dr_size(dr: DirectoryRecord) -> bytearray:
+    def _get_file_size(file: Union[Path, DirectoryRecord]) -> bytearray:
         """Get the size of the Directory Record formatted as a 4-byte unsigned integer bytearray."""
-        file_size = bytearray(4)
-        pack_into(b"I", file_size, 0, dr.get_data_length())
-        return file_size
+        if isinstance(file, DirectoryRecord):
+            file_size = file.get_data_length()
+        else:
+            file_size = file.stat().st_size
+        array = bytearray(4)
+        pack_into(b"I", array, 0, file_size)
+        return array
 
     @staticmethod
-    def _get_dr_creation_time(dr: DirectoryRecord) -> bytearray:
+    def _get_file_creation_time(file: Union[Path, DirectoryRecord]) -> bytearray:
         """
         Get the creation time in Microsoft FILETIME structure as a 8-byte unsigned integer bytearray.
         https://msdn.microsoft.com/en-us/library/windows/desktop/ms724284.aspx
         """
-        dr_date = dr.date
-        dr_date = datetime(
-            year=1900 + dr_date.years_since_1900, month=dr_date.month, day=dr_date.day_of_month,
-            hour=dr_date.hour, minute=dr_date.minute, second=dr_date.second,
-            # offset the timezone, since ISO's dates are offsets of GMT in 15 minute intervals, we
-            # need to calculate that but in seconds to pass to tzoffset.
-            tzinfo=tzoffset("GMT", (15 * dr_date.gmtoffset) * 60)
-        )
+        if isinstance(file, DirectoryRecord):
+            dr_date = file.date
+            dr_date = datetime(
+                year=1900 + dr_date.years_since_1900, month=dr_date.month, day=dr_date.day_of_month,
+                hour=dr_date.hour, minute=dr_date.minute, second=dr_date.second,
+                # offset the timezone, since ISO's dates are offsets of GMT in 15 minute intervals, we
+                # need to calculate that but in seconds to pass to tzoffset.
+                tzinfo=tzoffset("GMT", (15 * dr_date.gmtoffset) * 60)
+            )
+            epoch_offset = dr_date - datetime(1601, 1, 1, tzinfo=tzoffset(None, 0))
+        else:
+            # TODO: The created time may have been modified or even just differ after
+            #       extraction, any difference to the true timestamp will return a
+            #       different DVD ID. This is a problem.
+            c_time = file.stat().st_ctime
+            if c_time < -11644473600 or c_time >= 253402300800:
+                raise ValueError(f"Created timestamp for file {file.name} is out of range: {c_time}")
+            epoch_offset = datetime.utcfromtimestamp(c_time) - datetime(1601, 1, 1)
 
-        epoch_offset = dr_date - datetime(1601, 1, 1, tzinfo=tzoffset(None, 0))
-        creation_time_filetime = int(int(epoch_offset.total_seconds()) * (10 ** 7))
-
+        filetime = int(int(epoch_offset.total_seconds()) * (10 ** 7))
         file_creation_time = bytearray(8)
-        pack_into(b"Q", file_creation_time, 0, creation_time_filetime)
+        pack_into(b"Q", file_creation_time, 0, filetime)
 
         return file_creation_time
