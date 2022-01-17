@@ -7,7 +7,8 @@ def main():
     if len(argv) == 2:
         dvd_id = DvdId(argv[1])
         if not argv[1].startswith(r"\\."):
-            dvd_id.dump(argv[1])
+            save_path = dvd_id.dump(argv[1])
+            print(f" + Saved DVD ID to {save_path}")
         print(dvd_id.dumps())
 
         exit(0)
