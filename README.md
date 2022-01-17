@@ -33,6 +33,21 @@ There may be more differences as the repo gets commits, but these are the primar
 [sjwood's commit](https://github.com/sjwood/pydvdid/commit/03914fb7e24283c445e5af724f9d919b23caaf95) to
 the beginnings of this repository.
 
+## Important Information on DVD ID Accuracy
+
+1. The DVD ID generated assumes that the input Disc, ISO, or VIDEO_TS folder has the original untouched
+   file timestamps, file names, and header data. Any change or missing file will result in a different DVD ID.
+2. Because of this, AnyDVD HD, DVDFab Passkey, or anything similar that may change the disc data at a
+   driver-level should be disabled before the use of pydvdid-m.
+3. Just because it is an ISO file, does not mean it is truly untouched in the header areas that matter.
+   AnyDVD HD (and maybe others) may alter some bytes here and there when removing protection.
+4. VIDEO_TS folders are typically created by extracting the data from an ISO or Disc, which will most likely
+   re-generate file creation and modified timestamps. If you want truly accurate DVD IDs, I cannot advise
+   the use of this project on VIDEO_TS folders.
+
+If you want truly accurate DVD IDs, then only use this project direct from discs with all DVD ripping software
+disabled and closed. Make sure nothing like AnyDVD HD or DVDFab Passkey is running in the background.
+
 ## Installation
 
 ```shell
