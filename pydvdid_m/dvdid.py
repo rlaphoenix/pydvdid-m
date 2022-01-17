@@ -83,13 +83,15 @@ class DvdId:
         xml = xml % (self.disc_label or "", str(self.checksum))
         return xml
 
-    def dump(self, to: Union[Path, str]) -> int:
+    def dump(self, to: Union[Path, str]) -> Path:
         """
         Save DVD ID with Disc Label in XML format.
 
         Path can be to a direct file path or directory path.
         A custom filename using the Disc Label will be used for you
         if it's a path to a directory or non-XML file.
+
+        Returns the Path where the DVD ID was saved.
         """
         if not to:
             raise ValueError("A save path must be provided.")
@@ -100,7 +102,8 @@ class DvdId:
         if not to.suffix.lower().endswith(".xml"):
             to = to.with_suffix(f".{self.disc_label}.dvdid.xml")
         to.parent.mkdir(parents=True, exist_ok=True)
-        return to.write_text(self.dumps(), encoding="utf8")
+        to.write_text(self.dumps(), encoding="utf8")
+        return to
 
     def _get_files(self, iso_path: str) -> Iterator[DirectoryRecord]:
         """
