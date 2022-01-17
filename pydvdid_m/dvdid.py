@@ -20,8 +20,8 @@ class DvdId:
         checksum from the DVD .vob, .ifo, and .bup files found in the supplied DVD device.
         """
         if isinstance(target, str):
-            target = Path(target)
-            if target.is_dir():
+            target_path = Path(target)
+            if target_path.is_dir() and not target.startswith("\\\\.\\"):
                 if allow_folder_id or input(
                     "Warning: Extracted VIDEO_TS folders most likely have modified file timestamps. "
                     "You may receive an inaccurate DVD ID if the timestamp does not match whats stated "
@@ -29,11 +29,11 @@ class DvdId:
                     "Do you wish to continue anyway? (y/N): "
                 ).lower() != "y":
                     return
-                self.device = target
+                self.device = target_path
             else:
                 # assume path to an ISO
                 self.device = PyCdlib()
-                self.device.open(str(target))
+                self.device.open(target)
         elif isinstance(target, PyCdlib):
             self.device = target
         else:
