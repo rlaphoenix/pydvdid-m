@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2022-01-20
+
+### Added
+
+- Added important information on DVD ID accuracy to the README.
+- Added a "Saved DVD ID to" print statement in the primary script to show it got auto-saved, and to where.
+
+### Changed
+
+- Ensured that filenames are uppercase. ISO-9660 isn't strict about file-casing, but the DVD spec is.
+- Changed `DvdId.dump`'s return value from the `Path.write_text` int return value to the Path which
+  was written to.
+
+### Fixed
+
+- Fixed raw Windows Device target checks, e.g. `\\.\E:` from being detected as a VIDEO_TS folder.
+
 ## [1.1.0] - 2022-01-15
 
 ### Added 
